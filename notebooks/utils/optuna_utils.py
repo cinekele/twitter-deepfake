@@ -58,6 +58,7 @@ def instantiate_lr(trial: Trial) -> LogisticRegression:
         "solver": 'saga',
         "penalty": trial.suggest_categorical('lr_penalty', ['l1', 'l2']),
         "C": trial.suggest_float('lr_C', 1e-2, 1e2, log=True),
+        "max_iter": 1000,
         "n_jobs": 6
     }
     return LogisticRegression(**params)
