@@ -13,6 +13,11 @@ from xgboost import XGBClassifier
 
 
 def instantiate_lgbm(trial: Trial) -> LGBMClassifier:
+    """
+    Instantiate a LGBMClassifier with the parameters suggested by Optuna.
+    :param trial: Optuna Trial object
+    :return: LGBMClassifier with suggested parameters
+    """
     params = {
         "boosting_type": trial.suggest_categorical('lgbm_boosting_type', ['gbdt', 'dart']),
         "max_depth": trial.suggest_int('lgbm_max_depth', 1, 15),
@@ -24,6 +29,11 @@ def instantiate_lgbm(trial: Trial) -> LGBMClassifier:
 
 
 def instantiate_xgb(trial: Trial) -> XGBClassifier:
+    """
+    Instantiate a XGBClassifier with the parameters suggested by Optuna.
+    :param trial: Optuna Trial object
+    :return: XGBClassifier with suggested parameters
+    """
     params = {
         "booster": trial.suggest_categorical('xgb_booster', ['gbtree', 'dart']),
         "max_depth": trial.suggest_int('xgb_max_depth', 1, 15),
@@ -35,6 +45,11 @@ def instantiate_xgb(trial: Trial) -> XGBClassifier:
 
 
 def instantiate_rf(trial: Trial) -> RandomForestClassifier:
+    """
+    Instantiate a RandomForestClassifier with the parameters suggested by Optuna.
+    :param trial: Optuna Trial object
+    :return: RandomForestClassifier with suggested parameters
+    """
     params = {
         "max_depth": trial.suggest_int('rf_max_depth', 1, 15),
         "n_estimators": trial.suggest_int('rf_n_estimators', 10, 500, log=True),
@@ -46,6 +61,11 @@ def instantiate_rf(trial: Trial) -> RandomForestClassifier:
 
 
 def instantiate_svc(trial: Trial) -> SVC:
+    """
+    Instantiate a SVC with the parameters suggested by Optuna.
+    :param trial: Optuna Trial object
+    :return: SVC with suggested parameters
+    """
     params = {
         "kernel": trial.suggest_categorical('svc_kernel', ['linear', 'poly', 'rbf', 'sigmoid']),
         "C": trial.suggest_float('svc_C', 1e-2, 1e2, log=True)
@@ -54,6 +74,11 @@ def instantiate_svc(trial: Trial) -> SVC:
 
 
 def instantiate_lr(trial: Trial) -> LogisticRegression:
+    """
+    Instantiate a LogisticRegression with the parameters suggested by Optuna.
+    :param trial: Optuna Trial object
+    :return: LogisticRegression with suggested parameters
+    """
     params = {
         "solver": 'saga',
         "penalty": trial.suggest_categorical('lr_penalty', ['l1', 'l2']),
@@ -64,6 +89,7 @@ def instantiate_lr(trial: Trial) -> LogisticRegression:
     return LogisticRegression(**params)
 
 
+# Mapping from ngram name to ngram range
 NGRAMS_MAPPING = {
     "unigram": (1, 1),
     "digram": (1, 2),
@@ -72,6 +98,11 @@ NGRAMS_MAPPING = {
 
 
 def instantiate_tfidf(trial: Trial) -> TfidfVectorizer:
+    """
+    Instantiate a TfidfVectorizer with the parameters suggested by Optuna.
+    :param trial: Optuna Trial object
+    :return: TfidfVectorizer with suggested parameters
+    """
     ngram = trial.suggest_categorical('tfidf_ngram_range', ["unigram", "digram", "trigram"])
     ngram_range = NGRAMS_MAPPING[ngram]
     params = {
@@ -83,6 +114,7 @@ def instantiate_tfidf(trial: Trial) -> TfidfVectorizer:
     return TfidfVectorizer(**params)
 
 
+# Mapping from model name to model instantiation function
 MODELS_MAPPING = {
     'LGBM': instantiate_lgbm,
     'XGB': instantiate_xgb,
@@ -91,10 +123,12 @@ MODELS_MAPPING = {
     'LR': instantiate_lr
 }
 
+# Mapping from encoder name to encoder instantiation function
 ENCODERS_MAPPING = {
     'TFIDF': instantiate_tfidf
 }
 
+# Mapping from model name to model class
 MODELS = {
     'LGBM': LGBMClassifier,
     'XGB': XGBClassifier,
@@ -103,12 +137,18 @@ MODELS = {
     'LR': LogisticRegression
 }
 
+# Mapping from encoder name to encoder class
 ENCODERS = {
     'TFIDF': TfidfVectorizer
 }
 
 
 def extract_model_encoder(params: dict) -> (str, str, dict, dict):
+    """
+    Extract the model and encoder from the parameters' dictionary.
+    :param params: parameters dictionary
+    :return: model name, model parameters, encoder name (if present), encoder parameters (if present)
+    """
     model_params = {}
     encoder_params = {}
     for key in params.keys():
@@ -126,6 +166,13 @@ def extract_model_encoder(params: dict) -> (str, str, dict, dict):
 
 
 def get_best_model(params: dict, X: pd.DataFrame, y: pd.Series) -> Pipeline:
+    """
+    Get the model from the parameters' dictionary.
+    :param params: parameters dictionary
+    :param X: predictors
+    :param y: target
+    :return: fitted model with the given parameters
+    """
     model, model_params, encoder, encoder_params = extract_model_encoder(params)
     type_of_model = MODELS[model.upper()]
     if model in ('LGBM', 'XGB', 'RF', 'LR'):
@@ -153,6 +200,17 @@ def get_best_model(params: dict, X: pd.DataFrame, y: pd.Series) -> Pipeline:
 
 def objective(trial: Trial, X: pd.DataFrame, y: pd.Series, n_splits: int, model: str, encoder: str,
               random_state: int = 42) -> float:
+    """
+    Objective function for Optuna.
+    :param trial: Optuna Trial object
+    :param X: predictors
+    :param y: target
+    :param n_splits: number of splits for cross-validation
+    :param model: name of the model
+    :param encoder: name of the encoder
+    :param random_state: Random state for cross-validation
+    :return: cross-validation score of the model
+    """
     type_of_model = MODELS_MAPPING[model]
     type_of_encoder = ENCODERS_MAPPING[encoder]
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
@@ -168,12 +226,19 @@ def objective(trial: Trial, X: pd.DataFrame, y: pd.Series, n_splits: int, model:
     return np.mean(scores)
 
 
-def get_score(retrained_model, x_valid, y_valid):
-    y_pred = retrained_model.predict(x_valid)
+def get_score(retrained_model, x_test, y_test):
+    """
+    Get the score of the retrained model on the test set.
+    :param retrained_model: retrained model
+    :param x_test: predictors for the test set
+    :param y_test: target for the test set
+    :return: dictionary of metrics for the retrained model (balanced accuracy, f1-score, precision, recall)
+    """
+    y_pred = retrained_model.predict(x_test)
     results = {
-        'balanced_accuracy': balanced_accuracy_score(y_valid, y_pred),
-        'f1_score': f1_score(y_valid, y_pred),
-        'precision': precision_score(y_valid, y_pred),
-        'recall': recall_score(y_valid, y_pred)
+        'balanced_accuracy': balanced_accuracy_score(y_test, y_pred),
+        'f1_score': f1_score(y_test, y_pred),
+        'precision': precision_score(y_test, y_pred),
+        'recall': recall_score(y_test, y_pred)
     }
     return results
