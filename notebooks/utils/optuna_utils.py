@@ -147,10 +147,11 @@ def extract_model_encoder(params: dict) -> (str, str, dict, dict):
     """
     Extract the model and encoder from the parameters' dictionary.
     :param params: parameters dictionary
-    :return: model name, model parameters, encoder name (if present), encoder parameters (if present)
+    :return: model name, model parameters, encoder name, encoder parameters
     """
     model_params = {}
     encoder_params = {}
+    encoder = None
     for key in params.keys():
         begin, end = key.split('_', 1)
         begin = begin.upper()
@@ -160,8 +161,6 @@ def extract_model_encoder(params: dict) -> (str, str, dict, dict):
         elif begin in ENCODERS.keys():
             encoder = begin
             encoder_params[end] = params[key]
-    if encoder is None:
-        return model, model_params
     return model, model_params, encoder, encoder_params
 
 
@@ -198,7 +197,7 @@ def get_best_model(params: dict, X: pd.DataFrame, y: pd.Series) -> Pipeline:
     return pipeline
 
 
-def objective(trial: Trial, X: pd.DataFrame, y: pd.Series, n_splits: int, model: str, encoder: str,
+def objective(trial: Trial, X: pd.DataFrame, y: pd.Series, n_splits: int, model: str, encoder: str = None,
               random_state: int = 42) -> float:
     """
     Objective function for Optuna.
@@ -212,14 +211,21 @@ def objective(trial: Trial, X: pd.DataFrame, y: pd.Series, n_splits: int, model:
     :return: cross-validation score of the model
     """
     type_of_model = MODELS_MAPPING[model]
-    type_of_encoder = ENCODERS_MAPPING[encoder]
-    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
     model = type_of_model(trial)
-    encoder = type_of_encoder(trial)
-    pipeline = Pipeline([
-        ('encoder', encoder),
-        ('model', model)
-    ])
+
+    if encoder is not None:
+        type_of_encoder = ENCODERS_MAPPING[encoder]
+        encoder = type_of_encoder(trial)
+        pipeline = Pipeline([
+            ('encoder', encoder),
+            ('model', model)
+        ])
+    else:
+        pipeline = Pipeline([
+            ('model', model)
+        ])
+
+    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
     scorer = make_scorer(balanced_accuracy_score)
     scores = cross_val_score(pipeline, X, y, scoring=scorer, cv=skf)
 
