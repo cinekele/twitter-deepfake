@@ -17,16 +17,16 @@ This directory contains various Jupyter notebooks and Python scripts used in the
 - [`31_WordCNN.ipynb`](31_WordCNN.ipynb): Contains the WordCNN model (training and evaluation).
 - [`32_WordGRU.ipynb`](32_WordGRU.ipynb): Contains the WordGRU model (training and evaluation).
 - [`33_WordCNN+GRU.ipynb`](33_WordCNN%2BGRU.ipynb): Contains the combined WordCNN+GRU model (training and evaluation).
-- [`41_1-RoBert.ipynb`](41_1-RoBert.ipynb): Contains the RoBERTa model.
-- [`41_2-RoBert.ipynb`](41_2-RoBert.ipynb): Contains the RoBERTa model.
-- [`41_3-RoBert.ipynb`](41_3-RoBert.ipynb): Contains the RoBERTa model.
-- [`42_1-DistilBert.ipynb`](42_1-DistilBert.ipynb): Contains the DistilBERT model.
-- [`42_2-DistilBert+gpt-output.ipynb`](42_2-DistilBert%2Bgpt-output.ipynb): Contains the DistilBERT model with GPT-2 output dataset
-- [`43_1-GPT2.ipynb`](43_1-GPT2.ipynb): Contains the GPT-2 model.
-- [`49_Transformers-Results.ipynb`](49_Transformers-Results.ipynb): Contains the results of the transformer models.
+- [`41_1-RoBert.ipynb`](41_1-RoBert.ipynb): Contains the training of xlm-roberta-base model with frozen roberta part.
+- [`41_2-RoBert.ipynb`](41_2-RoBert.ipynb): Contains the training of xlm-roberta-base model (all elements are unfrozen).
+- [`41_3-RoBert.ipynb`](41_3-RoBert.ipynb): Contains the training of xlm-roberta-base model with lower learning rate than in notebook above.
+- [`42_1-DistilBert.ipynb`](42_1-DistilBert.ipynb): Contains the training of distilbert-base-uncased model.
+- [`42_2-DistilBert+gpt-output.ipynb`](42_2-DistilBert%2Bgpt-output.ipynb): Contains the training of distilbert-base-uncased model with additional initialization step of finetuning on GPT-2 output dataset
+- [`43_1-GPT2.ipynb`](43_1-GPT2.ipynb): Contains the training of GPT-2 model.
+- [`49_Transformers-Results.ipynb`](49_Transformers-Results.ipynb): Contains the evaluation of transformer models.
 - [`90_indepth_comparison.ipynb`](90_indepth_comparing.ipynb): Contains the in-depth comparison of the models. 
 It calculates accuracy for different types of generators for ML and DL models.
-- [`91_Aggregated_results.ipynb`](91_Aggregated_results.ipynb`): Contains the aggregated results of the models.
+- [`91_Aggregated_results.ipynb`](91_Aggregated_results.ipynb`): Contains the aggregated results of the models (visualizations and tables).
 
 ## Python Scripts
 
